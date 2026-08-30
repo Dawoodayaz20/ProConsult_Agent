@@ -6,7 +6,7 @@ services:
     environment:
       - GEMINI_SEC_KEY=${GEMINI_SEC_KEY}
     ports:
-      - "8001:8000"
+      - "8000:8000"
     networks:
       - ifrs16-network
 
