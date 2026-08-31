@@ -11,7 +11,7 @@ request_origin = os.getenv("request_origin")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"{request_origin}"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
