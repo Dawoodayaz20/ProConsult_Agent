@@ -1,3 +1,4 @@
+from openai import RateLimitError
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,14 +18,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+API_KEYS = [
+    "GEMINI_FIRST_KEY",
+    "GEMINI_SEC_KEY",
+    "GEMINI_THIRD_KEY"
+]
+
 class QuestionRequest(BaseModel):
     question: str
     
 @app.post("/generalAssistant")
 async def ask_general_agent(request: QuestionRequest):
-    try:
-        result = await kickoff(request.question)
-        return result
-    except Exception as e:
-        print(f"There was an error running general_agent:{e}")
-        return {"error:": str(e)}
+    last_error = None
+    for key in API_KEYS:
+        try:
+            result = await kickoff(request.question, key)
+            return result
+        except RateLimitError as e:
+            print(f"Key rate-limited, trying next key...")
+            last_error = e
+            continue
+    return {"error": f"All API keys exhausted: {last_error}"}
