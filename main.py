@@ -1,4 +1,4 @@
-from openai import RateLimitError
+from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -34,8 +34,13 @@ async def ask_general_agent(request: QuestionRequest):
         try:
             result = await kickoff(request.question, key)
             return result
-        except RateLimitError as e:
-            print(f"Key rate-limited, trying next key...")
-            last_error = e
-            continue
-    return {"error": f"All API keys exhausted: {last_error}"}
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                print(f"Key {key} rate-limited, trying next key...")
+                last_error = e
+                continue
+            raise
+    return JSONResponse(
+        status_code=429,
+        content={"success": False, "error": "rate_limit", "message": f"All API keys exhausted."}
+    )
